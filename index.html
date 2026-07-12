@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>큐슈 렌터카 로드트립 4박 5일 플래너</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar: Trip summary & Budget Calculator -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fa-solid fa-car-side neon-pulse"></i>
+                    <span>KYUSHU ROADTRIP</span>
+                </div>
+                <p class="subtitle">20대 남성 4인의 4박 5일 큐슈 일주</p>
+                <div class="flight-badge">
+                    <i class="fa-solid fa-plane-departure"></i>
+                    <span>08.04(화) 08:20 대구 -> 08.08(토) 19:20 후쿠오카</span>
+                </div>
+            </div>
+
+            <!-- Interactive Route Visualization (SVG Map) -->
+            <div class="map-container">
+                <h3>실시간 여행 경로 (Route Map)</h3>
+                <div class="svg-map-wrapper">
+                    <svg viewBox="0 0 300 320" class="kyushu-svg">
+                        <path d="M 80,40 C 130,20 180,30 200,50 C 230,80 280,100 270,160 C 260,200 240,280 180,300 C 140,310 110,290 90,260 C 70,220 50,180 40,150 C 30,120 40,60 80,40 Z" class="map-bg" />
+                        
+                        <!-- Connecting roads (dashed lines) -->
+                        <path d="M 100,80 Q 75,100 70,130" class="road-line" id="road-fuk-ngs" />
+                        <path d="M 70,130 Q 75,175 120,170" class="road-line road-ferry" id="road-ngs-kum-ferry" />
+                        <path d="M 70,130 Q 100,120 120,170" class="road-line" id="road-ngs-kum-hwy" />
+                        <path d="M 100,80 Q 115,130 120,170" class="road-line" id="road-fuk-kum" />
+                        <path d="M 120,170 L 155,160" class="road-line" id="road-kum-aso" />
+                        <path d="M 120,170 Q 170,150 185,120" class="road-line" id="road-kum-yuf-hwy" />
+                        <path d="M 155,160 Q 175,145 185,120" class="road-line" id="road-aso-yuf" />
+                        <path d="M 185,120 L 205,110" class="road-line" id="road-yuf-bep" />
+                        <path d="M 185,120 Q 180,75 170,40" class="road-line" id="road-yuf-shm" />
+                        <path d="M 205,110 Q 190,65 170,40" class="road-line" id="road-bep-shm" />
+                        <path d="M 170,40 Q 165,10 140,15" class="road-line" id="road-shm-tsu" />
+                        <path d="M 170,40 Q 130,55 100,80" class="road-line" id="road-shm-fuk" />
+                        
+                        <!-- Map Nodes (Markers) -->
+                        <g class="map-node active" id="node-fukuoka" transform="translate(100,80)">
+                            <circle r="6" />
+                            <text dx="8" dy="4">후쿠오카</text>
+                        </g>
+                        <g class="map-node" id="node-nagasaki" transform="translate(70,130)">
+                            <circle r="6" />
+                            <text dx="-48" dy="4">나가사키</text>
+                        </g>
+                        <g class="map-node" id="node-kumamoto" transform="translate(120,170)">
+                            <circle r="6" />
+                            <text dx="-48" dy="4">구마모토</text>
+                        </g>
+                        <g class="map-node" id="node-aso" transform="translate(155,160)">
+                            <circle r="5" />
+                            <text dx="8" dy="4">아소산</text>
+                        </g>
+                        <g class="map-node" id="node-yufuin" transform="translate(185,120)">
+                            <circle r="6" />
+                            <text dx="8" dy="4">유후인</text>
+                        </g>
+                        <g class="map-node" id="node-beppu" transform="translate(205,110)">
+                            <circle r="5" />
+                            <text dx="8" dy="4">벳부</text>
+                        </g>
+                        <g class="map-node" id="node-shimonoseki" transform="translate(170,40)">
+                            <circle r="6" />
+                            <text dx="8" dy="0">시모노세키</text>
+                        </g>
+                        <g class="map-node" id="node-tsunoshima" transform="translate(140,15)">
+                            <circle r="4" />
+                            <text dx="-32" dy="-5">츠노시마</text>
+                        </g>
+                    </svg>
+                </div>
+                <div class="map-legend">
+                    <span class="legend-item"><span class="legend-dot ferry-dot"></span>카 페리 탑승</span>
+                    <span class="legend-item"><span class="legend-dot active-dot"></span>선택된 경로</span>
+                </div>
+            </div>
+
+            <!-- N분의 1 정산기 -->
+            <div class="calculator-card">
+                <h3><i class="fa-solid fa-calculator"></i> 실시간 1인당 예상 비용</h3>
+                
+                <div class="calc-row">
+                    <span class="calc-label">렌터카 (5일 대여/주유/통행료)</span>
+                    <span class="calc-val" id="calc-car-total">¥52,000</span>
+                </div>
+                <div class="calc-row">
+                    <span class="calc-label">숙소 (4인실 / 4박 합계)</span>
+                    <span class="calc-val" id="calc-hotel-total">¥120,000</span>
+                </div>
+                <div class="calc-row">
+                    <span class="calc-label">기타 식비 & 입장료 (4인 합계)</span>
+                    <span class="calc-val" id="calc-activity-total">¥100,000</span>
+                </div>
+                <hr class="calc-divider">
+                <div class="calc-total">
+                    <div class="total-won">
+                        <span class="label">총합 (4인)</span>
+                        <span class="val" id="total-price-won">약 2,448,000 원</span>
+                    </div>
+                    <div class="total-yen">
+                        <span class="val" id="total-price-yen">¥272,000</span>
+                    </div>
+                </div>
+                
+                <div class="calc-per-person">
+                    <div class="per-person-header">
+                        <span>1인당 부담금 (1/4 분담)</span>
+                    </div>
+                    <div class="per-person-value">
+                        <span class="won" id="per-person-won">612,000 원</span>
+                        <span class="yen" id="per-person-yen">¥68,000</span>
+                    </div>
+                </div>
+
+                <!-- Custom Price Customizer -->
+                <div class="customizer-controls">
+                    <div class="control-group">
+                        <label>환율 기준 (100엔당 원화)</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="exchange-rate-input" value="900" step="10">
+                            <span>원</span>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label>개인 1일 식비/쇼핑 예산</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="personal-daily-budget" value="8000" step="500">
+                            <span>엔</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area: Itinerary details & Day selector -->
+        <main class="main-content">
+            <header class="main-header">
+                <h1>나만의 큐슈 렌터카 로드트립 커스텀 빌더</h1>
+                <p>로드트립 조합을 만들고 스팟 아카이브에서 가고 싶은 명소 70여 곳을 위시리스트에 담아 일정에 끼워보세요.</p>
+            </header>
+
+            <!-- Tab Navigation Buttons -->
+            <div class="tab-navigation">
+                <button class="tab-btn active" data-tab="planner">
+                    <i class="fa-solid fa-calendar-alt"></i> 로드트립 플래너
+                </button>
+                <button class="tab-btn" data-tab="archive">
+                    <i class="fa-solid fa-location-dot"></i> 후쿠오카 스팟 아카이브 <span class="archive-count-badge">71</span>
+                </button>
+            </div>
+
+            <!-- Tab Pane 1: Itinerary Builder -->
+            <div class="tab-pane active" id="pane-planner">
+                <div class="itinerary-builder">
+                    <!-- Day 1 -->
+                    <section class="builder-day-section" id="day-section-1">
+                        <div class="day-badge-container">
+                            <span class="day-num">DAY 1</span>
+                            <span class="day-date">08.04 (화)</span>
+                        </div>
+                        
+                        <div class="choices-container">
+                            <div class="choice-card active" data-day="1" data-option="A">
+                                <div class="choice-header">
+                                    <span class="choice-letter">Option A</span>
+                                    <h4>후쿠오카 도심 쇼핑 & 밤문화</h4>
+                                </div>
+                                <p class="choice-desc">첫날 운전 피로 없이 시내 다이묘 쇼핑과 맛있는 모츠나베, 나카스 포장마차 및 힙한 바/클럽에서 불태우는 일정.</p>
+                                <div class="choice-meta">
+                                    <span><i class="fa-solid fa-car"></i> 10 km (약 30분)</span>
+                                    <span><i class="fa-solid fa-yen-sign"></i> 통행료 0엔</span>
+                                </div>
+                            </div>
+                            <div class="choice-card" data-day="1" data-option="B">
+                                <div class="choice-header">
+                                    <span class="choice-letter">Option B</span>
+                                    <h4>나가사키 이국적인 야경 로드트립</h4>
+                                </div>
+                                <p class="choice-desc">공항 수령 후 곧바로 서쪽으로! 정통 나가사키 짬뽕을 먹고, 세계 3대 야경인 이나사야마 산정 전망대를 오르는 해안 로드트립.</p>
+                                <div class="choice-meta">
+                                    <span><i class="fa-solid fa-car"></i> 152 km (약 2시간)</span>
+                                    <span><i class="fa-solid fa-yen-sign"></i> 통행료 ¥3,500</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="day-details-container" id="day-details-1"></div>
+                    </section>
+
+                    <!-- Day 2 -->
+                    <section class="builder-day-section" id="day-section-2">
+                        <div class="day-badge-container">
+                            <span class="day-num">DAY 2</span>
+                            <span class="day-date">08.05 (수)</span>
+                        </div>
+                        
+                        <div class="choices-container">
+                            <div class="choice-card active" data-day="2" data-option="A">
+                                <div class="choice-header">
+                                    <span class="choice-letter">Option A</span>
+                                    <h4>아소산 활화산 & 밀크로드 드라이브</h4>
+                                </div>
+                                <p class="choice-desc">일본 최고의 드라이빙 성지 아소산! 활화산 연기를 내뿜는 분화구와 끝없는 초원 '쿠사센리'를 달리는 다이내믹 코스.</p>
+                                <div class="choice-meta">
+                                    <span><i class="fa-solid fa-car"></i> 180 km (약 3시간)</span>
+                                    <span><i class="fa-solid fa-ship"></i> 페리 탑승 가능</span>
+                                </div>
+                            </div>
+                            <div class="choice-card" data-day="2" data-option="B">
+                                <div class="choice-header">
+                                    <span class="choice-letter">Option B</span>
+                                    <h4>구마모토성 역사 탐방 & 온천 힐링</h4>
+                                </div>
+                                <p class="choice-desc">웅장한 구마모토성 관람과 전통 정원을 거닐며 150년 전통 장어덮밥을 먹고 맛있는 말고기 육회를 경험하는 여유로운 힐링 코스.</p>
+                                <div class="choice-meta">
+                                    <span><i class="fa-solid fa-car"></i> 130 km (약 2시간)</span>
+                                    <span><i class="fa-solid fa-yen-sign"></i> 통행료 ¥2,200</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="day-details-container" id="day-details-2"></div>
+                    </section>
+
+                    <!-- Day 3 -->
+                    <section class="builder-day-section" id="day-section-3">
+                        <div class="day-badge-container">
+                            <span class="day-num">DAY 3</span>
+                            <span class="day-date">08.06 (목)</span>
+                        </div>
+                        
+                        <div class="choices-container">
+                            <div class="choice-card active" data-day="3" data-option="A">
+                                <div class="choice-header">
+                                    <span class="choice-letter">Option A</span>
+                                    <h4>야마나미 하이웨이 & 고급 료칸 힐링</h4>
+                                </div>
+                                <p class="choice-desc">큐슈 최고의 드라이브 길 '야마나미 하이웨이' 종단. 최고급 유후인 료칸 가이세키 저녁식사와 온천 맥주 파티.</p>
+                                <div class="choice-meta">
+                                    <span><i class="fa-solid fa-car"></i> 95 km (약 1시간 50분)</span>
+                                    <span><i class="fa-solid fa-hot-tub-person"></i> 가이세키 포함</span>
+                                </div>
+                            </div>
+                            <div class="choice-card" data-day="3" data-option="B">
+                                <div class="choice-header">
+                                    <span class="choice-letter">Option B</span>
+                                    <h4>벳부 지옥온천 투어 & 로컬 푸드파이터</h4>
+                                </div>
+                                <p class="choice-desc">가마도 지옥온천에서 온천 계란과 라무네 사이다를 즐기고, 벳부의 로컬 이자카야 골목에서 현지인들과 밤늦게 어울리는 가성비 코스.</p>
+                                <div class="choice-meta">
+                                    <span><i class="fa-solid fa-car"></i> 110 km (약 2시간)</span>
+                                    <span><i class="fa-solid fa-yen-sign"></i> 통행료 ¥1,800</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="day-details-container" id="day-details-3"></div>
+                    </section>
+
+                    <!-- Day 4 -->
+                    <section class="builder-day-section" id="day-section-4">
+                        <div class="day-badge-container">
+                            <span class="day-num">DAY 4</span>
+                            <span class="day-date">08.07 (금)</span>
+                        </div>
+                        
+                        <div class="choices-container">
+                            <div class="choice-card active" data-day="4" data-option="A">
+                                <div class="choice-header">
+                                    <span class="choice-letter">Option A</span>
+                                    <h4>츠노시마 대교 바다 질주 & 후쿠오카 불금</h4>
+                                </div>
+                                <p class="choice-desc">바다 위를 달리는 환상의 에메랄드빛 츠노시마 대교 드라이브, 시모노세키 대왕 초밥 점심 후 후쿠오카 텐진 텐션 풀차징 밤샘 코스.</p>
+                                <div class="choice-meta">
+                                    <span><i class="fa-solid fa-car"></i> 270 km (약 3시간 30분)</span>
+                                    <span><i class="fa-solid fa-martini-glass-citrus"></i> 클러빙/밤문화</span>
+                                </div>
+                            </div>
+                            <div class="choice-card" data-day="4" data-option="B">
+                                <div class="choice-header">
+                                    <span class="choice-letter">Option B</span>
+                                    <h4>모지코 레트로 감성 & 시모노세키 힐링 밤</h4>
+                                </div>
+                                <p class="choice-desc">이국적인 모지코 항구에서 수제 맥주와 오븐 야키카레를 즐기고, 번잡한 도시 대신 간몬해협 바다를 마주한 온천 호텔에서 잔잔하게 보내는 밤.</p>
+                                <div class="choice-meta">
+                                    <span><i class="fa-solid fa-car"></i> 140 km (약 2시간)</span>
+                                    <span><i class="fa-solid fa-bridge"></i> 칸몬대교 뷰</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="day-details-container" id="day-details-4"></div>
+                    </section>
+
+                    <!-- Day 5 -->
+                    <section class="builder-day-section" id="day-section-5">
+                        <div class="day-badge-container">
+                            <span class="day-num">DAY 5</span>
+                            <span class="day-date">08.08 (토)</span>
+                        </div>
+                        
+                        <div class="choices-container">
+                            <div class="choice-card active" data-day="5" data-option="A">
+                                <div class="choice-header">
+                                    <span class="choice-letter">Option A</span>
+                                    <h4>텐진 파르코 오픈런 & 지름신 영접</h4>
+                                </div>
+                                <p class="choice-desc">출국 전 마지막 지름길! 키와미야 함바그 흡입, 돈키호테/텐진 지하상가에서 기념품 캐리어 가득 담는 쇼핑 집중 코스.</p>
+                                <div class="choice-meta">
+                                    <span><i class="fa-solid fa-car"></i> 15 km (약 40분)</span>
+                                    <span><i class="fa-solid fa-bag-shopping"></i> 쇼핑 올인</span>
+                                </div>
+                            </div>
+                            <div class="choice-card" data-day="5" data-option="B">
+                                <div class="choice-header">
+                                    <span class="choice-letter">Option B</span>
+                                    <h4>다자이후 학문신사 & 실물 뉴건담 투어</h4>
+                                </div>
+                                <p class="choice-desc">울창한 숲의 다자이후 신사 참배와 매화떡 시식 후, 라라포트에 있는 1대1 크기 압도적 건담 로봇과 인증샷을 남기는 볼거리 코스.</p>
+                                <div class="choice-meta">
+                                    <span><i class="fa-solid fa-car"></i> 45 km (약 1시간 20분)</span>
+                                    <span><i class="fa-solid fa-robot"></i> 건담 인증샷</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="day-details-container" id="day-details-5"></div>
+                    </section>
+                </div>
+            </div>
+
+            <!-- Tab Pane 2: Spot Archive -->
+            <div class="tab-pane" id="pane-archive">
+                <!-- Search & Filters -->
+                <div class="archive-controls">
+                    <div class="search-box-wrapper">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="spot-search" placeholder="스팟 이름이나 묘사 검색 (예: 오호리, 모츠나베)...">
+                    </div>
+                    
+                    <div class="category-chips" id="filter-chips">
+                        <button class="chip active" data-category="all">전체 <span class="badge">71</span></button>
+                        <button class="chip" data-category="명소">명소 <span class="badge">9</span></button>
+                        <button class="chip" data-category="자연·전망">자연·전망 <span class="badge">10</span></button>
+                        <button class="chip" data-category="온천">온천 <span class="badge">6</span></button>
+                        <button class="chip" data-category="근교">근교 <span class="badge">8</span></button>
+                        <button class="chip" data-category="라멘·면">라멘·면 <span class="badge">8</span></button>
+                        <button class="chip" data-category="로컬푸드">로컬푸드 <span class="badge">8</span></button>
+                        <button class="chip" data-category="야타이·술">야타이·술 <span class="badge">8</span></button>
+                        <button class="chip" data-category="카페·디저트">카페·디저트 <span class="badge">5</span></button>
+                        <button class="chip" data-category="쇼핑·액티비티">쇼핑·액티비티 <span class="badge">9</span></button>
+                    </div>
+                </div>
+
+                <!-- Spot Grid -->
+                <div class="spots-grid" id="spots-grid">
+                    <!-- Loaded dynamically via app.js -->
+                </div>
+            </div>
+            
+            <footer class="footer">
+                <p>&copy; 2026 Antigravity. 20대 네 남자의 큐슈 로드트립을 위해 커스텀 빌드되었습니다.</p>
+            </footer>
+        </main>
+    </div>
+
+    <!-- Floating Wishlist Button -->
+    <button class="wishlist-float-btn" id="wishlist-trigger">
+        <i class="fa-solid fa-star"></i>
+        <span class="badge" id="wishlist-count">0</span>
+    </button>
+
+    <!-- Wishlist sliding drawer -->
+    <div class="wishlist-drawer" id="wishlist-drawer">
+        <div class="drawer-header">
+            <h3><i class="fa-solid fa-star" style="color: #f59e0b;"></i> 가고 싶은 곳 찜</h3>
+            <button class="close-btn" id="wishlist-close"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <p class="drawer-subtitle">마음에 드는 곳을 일정에 끼워 정산 요금에 합산해보세요.</p>
+        <div class="drawer-content" id="wishlist-items">
+            <!-- Loaded dynamically via app.js -->
+        </div>
+    </div>
+    
+    <!-- Backdrop overlay for drawer -->
+    <div class="drawer-overlay" id="drawer-overlay"></div>
+
+    <!-- Custom JS -->
+    <script src="app.js"></script>
+</body>
+</html>
